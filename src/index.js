@@ -16,13 +16,13 @@ const resolvers = {
   Product: {
     async media(parent, args, context, info) {
       return parent.media;
-    },
+    }
   },
   ProductVariant: {
     async media(parent, args, context, info) {
-      return parent.media?parent.media:[];
-    },
-  },
+      return parent.media ? parent.media : [];
+    }
+  }
 };
 
 function myStartup1(context) {
@@ -31,9 +31,7 @@ function myStartup1(context) {
 
   if (app.expressApp) {
     // enable files upload
-    app.expressApp.use(
-      fileUpload()
-    );
+    app.expressApp.use(fileUpload());
 
     //add other middleware
     app.expressApp.use(cors());
@@ -41,19 +39,19 @@ function myStartup1(context) {
     app.expressApp.use(bodyParser.urlencoded({ extended: true }));
     app.expressApp.use(morgan("dev"));
     app.expressApp.post("/upload", async (req, res) => {
-console.log("req.body",req.body)
-console.log("req.files",req.files)
-      let isMulti=req.body.isMulti;
-      let uploadPath=req.body.uploadPath;
+      console.log("req.body", req.body);
+      console.log("req.files", req.files);
+      let isMulti = req.body.isMulti;
+      let uploadPath = req.body.uploadPath;
 
       let uploads = [];
       try {
         if (!req.files) {
           res.send({
             status: false,
-            message: "No file uploaded",
+            message: "No file uploaded"
           });
-        } else if(isMulti=='true') {
+        } else if (isMulti == "true") {
           let data = [];
 
           //loop all files
@@ -61,60 +59,59 @@ console.log("req.files",req.files)
             let photo = req.files.photos[key];
             let promise = S3Upload(
               req.files.photos[key].data,
-              "userProducts/" + req.files.photos[key].name,key
+              "userProducts/" + req.files.photos[key].name,
+              key
             ).then((uploadResponse) => {
               console.log("upload resposne", uploadResponse);
-            if(uploadResponse["key"]){
-              data[uploadResponse["key"]].url=uploadResponse.url
-            }  
+              if (uploadResponse["key"]) {
+                data[uploadResponse["key"]].url = uploadResponse.url;
+              }
             });
             uploads.push(promise);
             //push file details
             data.push({
               name: photo.name,
               mimetype: photo.mimetype,
-              size: photo.size,
+              size: photo.size
             });
           });
           Promise.all(uploads)
-            .then(async function () {
+            .then(async function() {
               console.log(data);
               res.send({
                 status: true,
                 message: "Files are uploaded",
-                data: data,
+                data: data
               });
             })
-            .catch(function (err) {
+            .catch(function(err) {
               console.log(err);
               res.send(err);
             });
           //return response
-        }else if(isMulti=='false'){
+        } else if (isMulti == "false") {
           let data = [];
 
-             //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
-             let photo = req.files.photos;
-             data.push({
-              name: photo.name,
-              mimetype: photo.mimetype,
-              size: photo.size,
-            });
+          //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
+          let photo = req.files.photos;
+          data.push({
+            name: photo.name,
+            mimetype: photo.mimetype,
+            size: photo.size
+          });
           S3Upload(
-              req.files.photos.data,
-              uploadPath + req.files.photos.name,0
-            ).then((uploadResponse) => {
-            
-              data[0].url=uploadResponse.url
-             
+            req.files.photos.data,
+            uploadPath + req.files.photos.name,
+            0
+          ).then((uploadResponse) => {
+            data[0].url = uploadResponse.url;
+
             res.send({
               status: true,
-              message: 'File is uploaded',
+              message: "File is uploaded",
               data
-          });
             });
- 
-          
+          });
         }
       } catch (err) {
         console.lofg("err", err);
@@ -127,84 +124,84 @@ console.log("req.files",req.files)
     large: {
       type: String,
       label: "Large",
-      optional: true,
+      optional: true
     },
     medium: {
       type: String,
       label: "Medium",
-      optional: true,
+      optional: true
     },
     original: {
       type: String,
       label: "Original",
-      optional: true,
+      optional: true
     },
     small: {
       type: String,
       label: "Small",
-      optional: true,
+      optional: true
     },
     thumbnail: {
       type: String,
       label: "Thumbnail",
-      optional: true,
-    },
+      optional: true
+    }
   });
   const ImageInfo = new SimpleSchema({
     priority: {
       type: Number,
-      defaultValue: 0,
+      defaultValue: 0
     },
     productId: {
       type: String,
-      label: "Product Id",
+      label: "Product Id"
     },
     variantId: {
       type: String,
       label: "Variant Id",
-      optional: true,
+      optional: true
     },
     URLs: {
       type: ImageSizes,
-      optional: true,
-    },
+      optional: true
+    }
   });
 
   context.simpleSchemas.Product.extend({
     media: {
       type: Array,
       label: "Media",
-      optional: true,
+      optional: true
     },
     "media.$": {
-      type: ImageInfo,
+      type: ImageInfo
     },
     mediaS3: {
       type: Array,
       label: "Media",
-      optional: true,
+      optional: true
     },
     "mediaS3.$": {
-      type: ImageInfo,
-    },
+      type: ImageInfo
+    }
   });
   context.simpleSchemas.ProductVariant.extend({
     media: {
       type: Array,
       label: "Media",
-      optional: true,
+      optional: true
     },
     "media.$": {
-      type: ImageInfo,
+      type: ImageInfo
     },
     mediaS3: {
       type: Array,
       label: "Media",
-      optional: true,
+      optional: true
     },
     "mediaS3.$": {
-      type: ImageInfo,
-    },
+      type: ImageInfo
+    }
   });
 }
 
@@ -217,6 +214,9 @@ async function S3PublishMedia(
   const { app, collections, rootUrl } = context;
   const { Product } = collections;
   // let productObj=await getProductMedia(context,catalogProduct.productId);
+  console.log(`catalogProduct`, catalogProduct);
+  console.log(`Product`, Product);
+  console.log(`product`, product);
   catalogProduct.media = product.media;
   catalogProduct.primaryImage = product.media[0];
   catalogProduct.variants &&
@@ -224,10 +224,10 @@ async function S3PublishMedia(
       const productVariant = variants.find(
         (variant) => variant._id === catalogVariant.variantId
       );
-      catalogVariant.uploadedBy = productVariant.uploadedBy || null;
-      catalogVariant.ancestorId = productVariant["ancestors"][0]
-        ? productVariant["ancestors"][0]
-        : null;
+      // catalogVariant.uploadedBy = productVariant.uploadedBy || null;
+      // catalogVariant.ancestorId = productVariant["ancestors"][0]
+      //   ? productVariant["ancestors"][0]
+      //   : null;
 
       catalogVariant.media = productVariant.media;
     });
@@ -245,11 +245,11 @@ export default async function register(app) {
     version: pkg.version,
     functionsByType: {
       startup: [myStartup1],
-      publishProductToCatalog: [S3PublishMedia],
+      publishProductToCatalog: [S3PublishMedia]
     },
     graphQL: {
       schemas: [mySchema],
-      resolvers,
-    },
+      resolvers
+    }
   });
 }
