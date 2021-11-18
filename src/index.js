@@ -218,7 +218,7 @@ async function S3PublishMedia(
   console.log(`Product`, Product);
   console.log(`product`, product);
   catalogProduct.media = product.media;
-  catalogProduct.primaryImage = product.media[0];
+  // catalogProduct.primaryImage = product.media[0];
   catalogProduct.variants &&
     catalogProduct.variants.map(async (catalogVariant) => {
       const productVariant = variants.find(
